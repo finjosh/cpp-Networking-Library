@@ -2,16 +2,18 @@
 PROJECT_DIR_TEMP:=$(patsubst %/makefile,%, $(abspath $(lastword ${MAKEFILE_LIST})))
 #! DONT EDIT ABOVE THIS
 
+# the number is how many tasks are going to be used for compiling (should be the number of threads your cpu has for best performance)
+MAKEFLAGS=-j16
 # exe name
 PROJECT:=main
 # the directory in which all .o and .d files will be made
 OBJ_O_DIR:=bin
 # the include flags for compilation by default includes the project directory and include directory
-INCLUDE_DIRS=/VSCodeFolder/Libraries/SFML-2.6.1/include /VSCodeFolder/Libraries/TGUI-1.3/include /Git_projects/cpp-Utilities/include
+INCLUDE_DIRS=/VSCodeFolder/Libraries/SFML-2.6.1/include /VSCodeFolder/Libraries/TGUI-1.x/include /Git_projects/cpp-Utilities/include
 # extra include flags
 INCLUDE_FLAGS=-D SFML_STATIC
 # the paths to libs for linking
-LIB_DIRS=/VSCodeFolder/Libraries/SFML-2.6.1/lib /VSCodeFolder/Libraries/TGUI-1.3/lib /Git_projects/cpp-Utilities/libs
+LIB_DIRS=/VSCodeFolder/Libraries/SFML-2.6.1/lib /VSCodeFolder/Libraries/TGUI-1.x/lib /Git_projects/cpp-Utilities/libs
 # source files directory (the project directory is automatically added)
 SRC:=src
 # the directory for lib files that are made with "make lib"
@@ -30,13 +32,16 @@ LINKERFLAGS:=-lutils -ltgui-s -lsfml-graphics-s -lsfml-window-s \
 			-lsfml-system-s -lsfml-audio-s -lsfml-network-s \
 			-lws2_32 -lflac -lvorbisenc -lvorbisfile -lvorbis \
 			-logg -lopenal32 -lopengl32 -lwinmm -lgdi32 -lfreetype \
-			-lstdc++ -mwindows
+			-lstdc++ \
+			# -mwindows
 # flags to generate dependencies for all .o files
 DEPFLAGS:=-MP -MD
+DEBUG_FLAGS = -g
+RELEASE_FLAGS = -O3
 # any compiler options
 # put -Werror for warnings to be treated as errors
 # use -Wextra -Wall every so often to find possible bugs
-COMPILE_OPTIONS:=-std=c++20 -g -static
+COMPILE_OPTIONS:=-std=c++20 -static ${DEBUG_FLAGS}
 
 #! DONT EDIT ANYTHING FROM HERE DOWN
 

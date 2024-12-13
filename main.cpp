@@ -9,7 +9,7 @@
 #include "include/Networking/Client.hpp"
 #include "include/Networking/Server.hpp"
 
-#include "Utils/Debug/CommandPrompt.hpp"
+#include "Utils/CommandPrompt.hpp"
 #include "Utils/TerminatingFunction.hpp"
 #include "Utils/Debug/TFuncDisplay.hpp"
 #include "Utils/Debug/VarDisplay.hpp"
@@ -54,18 +54,15 @@ int main()
         Command::Prompt::print(std::to_string(id) + ": " + str); 
     });
 
-
     //! Required to initialize VarDisplay and CommandPrompt
     // creates the UI for the VarDisplay
-    VarDisplay::init(gui); 
+    VarDisplay::init(gui);
     // creates the UI for the CommandPrompt
     Command::Prompt::init(gui);
     addThemeCommands();
     // create the UI for the TFuncDisplay
     TFuncDisplay::init(gui);
     
-    TFuncDisplay::setVisible();
-    Command::Prompt::setVisible();
     //! ---------------------------------------------------
     
     Command::Handler::addCommand(Command::command("send", "Sends a message to all other clients connected if connection is open", {
@@ -106,11 +103,10 @@ int main()
         sf::Event event;
         while (window.pollEvent(event))
         {
-            gui.handleEvent(event);
-
             //! Required for LiveVar and CommandPrompt to work as intended
             LiveVar::UpdateLiveVars(event);
-            Command::Prompt::UpdateEvent(event);
+            if (!Command::Prompt::UpdateEvent(event))
+                gui.handleEvent(event);
             //! ----------------------------------------------------------
 
             if (event.type == sf::Event::Closed)
@@ -136,19 +132,11 @@ int main()
             upkeep = 0;
         }
 
-        auto temp = sf::RectangleShape({10000,10000});
-        temp.setFillColor(sf::Color(50,0,50));
-        window.draw(temp);
-
-        // sDisplay.updateInfoDisplay();
-
         // draw for tgui
         gui.draw();
         // display for sfml window
         window.display();
     }
-
-    // sDisplay.closeConnectionDisplay();
 
     window.close();
 
@@ -158,7 +146,7 @@ int main()
 void addThemeCommands()
 {
     Command::Handler::addCommand(Command::command{"setTheme", "Function used to set the theme of the UI (The previous outputs in the command prompt will not get updated color)", 
-        {Command::print, "Trying calling one of the sub commands"},
+        {Command::helpCommand, "Trying calling one of the sub commands"}, {},
         std::list<Command::command>{
             Command::command{"default", "(Currently does not work, coming soon) Sets the theme back to default", {[](){ 
                 tgui::Theme::setDefault(""); //! This does not work due to a tgui issue

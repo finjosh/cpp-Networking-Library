@@ -2,18 +2,18 @@
 A simple and efficient C++ networking library built using ([SFML](https://www.sfml-dev.org/index.php))'s networking module.
 
 ### Tested with: 
-  - Compiler: MSYS2
-  - Version: g++.exe (Rev3, Built by MSYS2 project) 12.1.0
+    - Compiler: g++
+    - Version: g++.exe (Rev2, Built by MSYS2 project) 14.2.0
 
 ### [SFML](https://www.sfml-dev.org/index.php)
-  - Version: 2.6.1
+    - Version: 2.6.1
 
 ### [TGUI](https://tgui.eu/)
-  - TGUI is used for the Socket UI and Connection Display, which are not required for the networking library to work
-  - Version: 1.3
+    - TGUI is used for the Socket UI and Connection Display, which are not required for the networking library to work
+    - Version: 1.x (2024-08-20)
 
 ### [cpp-Utilities](https://github.com/finjosh/cpp-Utilities)
-  - Built with the latest release
+    - Built with the latest release
 
 # Class breakdown
 | File | Brief Description | Dependencies |

@@ -1,4 +1,5 @@
 #include "Networking/Server.hpp"
+#include <algorithm>
 
 using namespace udp;
 
