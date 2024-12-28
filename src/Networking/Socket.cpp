@@ -9,7 +9,10 @@ using namespace udp;
 
 Socket::Socket()
 {
-    m_ip = sf::IpAddress::getPublicAddress(sf::seconds(1)).toInteger();
+    if (const auto publicIP = sf::IpAddress::getPublicAddress(sf::seconds(1)))
+        m_id = publicIP->toInteger();
+    else
+        m_id = 0;
     setPort(getLocalPort());
 }
 
@@ -26,48 +29,57 @@ Socket::~Socket()
 void Socket::m_receive_packets_thread(std::stop_token sToken)
 {
     sf::Packet packet;
-    sf::IpAddress senderIP;
+    IpAddress_t senderIP(sf::IpAddress::LocalHost);
     unsigned short senderPort;
 
     while (!sToken.stop_requested()) {
         Status receiveStatus = this->receive(packet, senderIP, senderPort);
-        if (receiveStatus == sf::Socket::Error)
+        switch (receiveStatus)
         {
-            if (sToken.stop_requested()) break;
-            throw std::runtime_error("Receiving packet: " + std::to_string(receiveStatus));
+        case sf::Socket::Status::Error:
+            if (sToken.stop_requested()) return;
+            throw std::runtime_error("Error Receiving Packet (Code: " + std::to_string((int)receiveStatus) + ")");
+            break;
+        
+        case sf::Socket::Status::Disconnected:
+            if (sToken.stop_requested()) return;
+            break;
         }
 
-        sf::Int8 packetType;
+        std::int8_t packetType;
         packet >> packetType;
 
+        if (!senderIP.has_value())
+            continue;
+        
         switch (packetType)
         {
         case PacketType::Data:
-            m_parse_data(packet, senderIP, senderPort);
+            m_parse_data(packet, senderIP.value(), senderPort);
             break;
         
         case PacketType::ConnectionRequest:
-            m_parse_connection_request(packet, senderIP, senderPort);
+            m_parse_connection_request(packet, senderIP.value(), senderPort);
             break;
 
         case PacketType::ConnectionClose:
-            m_parse_connection_close(packet, senderIP, senderPort);
+            m_parse_connection_close(packet, senderIP.value(), senderPort);
             break;
 
         case PacketType::ConnectionConfirm:
-            m_parse_connection_confirm(packet, senderIP, senderPort);
+            m_parse_connection_confirm(packet, senderIP.value(), senderPort);
             break;
 
         case PacketType::PasswordRequest:
-            m_parse_password_request(packet, senderIP, senderPort);
+            m_parse_password_request(packet, senderIP.value(), senderPort);
             break;
 
         case PacketType::Password:
-            m_parse_password(packet, senderIP, senderPort);
+            m_parse_password(packet, senderIP.value(), senderPort);
             break;
 
         default:
-            m_parse_unkown(packet, senderIP, senderPort);
+            m_parse_unkown(packet, senderIP.value(), senderPort);
             break;
         }
 
@@ -125,7 +137,7 @@ void Socket::m_reset_connection_data()
 
 void Socket::m_send(sf::Packet& packet, sf::IpAddress ip, PORT port)
 {
-    if (sf::UdpSocket::send(packet, sf::IpAddress(ip), port))
+    if (sf::UdpSocket::send(packet, sf::IpAddress(ip), port) != sf::Socket::Status::Done)
         throw std::runtime_error("Could not send packet (Socket::m_send Function)");
 }
 
@@ -158,7 +170,7 @@ void Socket::stopThreads()
     {
         // Sending a packet to its self so the receive thread can continue execution and exit
         sf::Packet temp = DataPacketTemplate();
-        m_send(temp, sf::IpAddress{m_ip}, m_port);
+        m_send(temp, sf::IpAddress{m_id}, m_port);
         
         m_receiveThread->detach();
         delete(m_receiveThread);
@@ -184,16 +196,17 @@ bool Socket::getThreadSafeOverride() const
 //* Getter
 
 ID Socket::getID() const
-{ return (ID)m_ip; }
+{ return (ID)m_id; }
 
-sf::IpAddress Socket::getIP() const
-{ return sf::IpAddress(m_ip); }
+IpAddress_t Socket::getIP() const
+{ 
+    if (m_id == 0)
+        return std::nullopt;
+    return sf::IpAddress(m_id); 
+}
 
-sf::IpAddress Socket::getLocalIP() const
+IpAddress_t Socket::getLocalIP() const
 { return sf::IpAddress::getLocalAddress(); }
-
-IP Socket::getIntIP() const
-{ return m_ip; }
 
 double Socket::getConnectionTime() const
 { return m_connectionTime; }
@@ -288,29 +301,8 @@ bool Socket::isSendingPackets() const
 bool Socket::NeedsPassword() const
 { return this->m_needsPassword; }
 
-bool Socket::isValidIpAddress(sf::IpAddress ipAddress)
-{
-    if (ipAddress != sf::IpAddress::None) return true;
-    else return false;
-}
-
-bool Socket::isValidIpAddress(sf::Uint32 ipAddress)
-{
-    if (sf::IpAddress(ipAddress) != sf::IpAddress::None) return true;
-    else return false;
-}
-
 bool Socket::isValidIpAddress(const std::string& ipAddress)
-{
-    if (sf::IpAddress(ipAddress) != sf::IpAddress::None) 
-    {
-        return true;
-    }
-    else 
-    {
-        return false;
-    }
-}
+{ return sf::IpAddress::resolve(ipAddress).has_value(); }
 
 // ---------------------------
 
@@ -338,7 +330,7 @@ sf::Packet Socket::DataPacketTemplate()
     return out;
 }
 
-sf::Packet Socket::ConnectionConfirmPacket(sf::Uint32 id)
+sf::Packet Socket::ConnectionConfirmPacket(std::uint32_t id)
 {
     sf::Packet out;
     out << PacketType::ConnectionConfirm;

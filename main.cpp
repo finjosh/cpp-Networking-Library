@@ -100,16 +100,15 @@ int main()
         // updating the delta time var
         sf::Time deltaTime = deltaClock.restart();
         upkeep += deltaTime.asSeconds();
-        sf::Event event;
-        while (window.pollEvent(event))
+        while (const std::optional<sf::Event> event = window.pollEvent())
         {
             //! Required for LiveVar and CommandPrompt to work as intended
-            LiveVar::UpdateLiveVars(event);
-            if (!Command::Prompt::UpdateEvent(event))
-                gui.handleEvent(event);
+            LiveVar::UpdateLiveVars(event.value());
+            if (!Command::Prompt::UpdateEvent(event.value()))
+                gui.handleEvent(event.value());
             //! ----------------------------------------------------------
 
-            if (event.type == sf::Event::Closed)
+            if (event->is<sf::Event::Closed>())
                 window.close();
         }
         //! Updates all the vars being displayed

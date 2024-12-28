@@ -16,7 +16,7 @@ private:
 
     //* Client Variables
 
-        sf::IpAddress m_serverIP;
+        IpAddress_t m_serverIP;
         /// @brief unsigned short _serverPort;
         bool m_wrongPassword = false;
         /// @brief Time since last packet from server
@@ -82,16 +82,21 @@ public:
         void setAndSendPassword(const std::string& password);
         void sendPasswordToServer();
         /// @note does nothing if the connection is open
-        void setServerData(sf::IpAddress serverIP, PORT serverPort);
+        /// @note a std::nullopt IP will result in no data being set
+        /// @returns if the data was set or not
+        bool setServerData(IpAddress_t serverIP, PORT serverPort);
         /// @note does nothing if the connection is open
-        void setServerData(sf::IpAddress serverIP);
+        /// @note a std::nullopt IP will result in no data being set
+        /// @returns if the data was set or not
+        bool setServerData(IpAddress_t serverIP);
         /// @note does nothing if the connection is open
-        void setServerData(PORT port);
+        bool setServerData(PORT port);
         /// @brief sends the packet to the server
+        /// @warning must not send data when there is an invalid server IP set
         void sendToServer(sf::Packet& packet);
         /// @brief returns the time in seconds
         float getTimeSinceLastPacket() const;
-        sf::IpAddress getServerIP() const;
+        IpAddress_t getServerIP() const;
         unsigned int getServerPort() const;
 
         //* Pure Virtual Definitions
@@ -100,7 +105,7 @@ public:
             /// @returns true for successful send of connection attempt (DOES NOT MEAN THERE IS A CONNECTION CONFIRMATION)
             virtual bool tryOpenConnection();
             /// @brief closes the connection to the server
-            virtual void closeConnection();
+            virtual void closeConnection(const std::string& reason = "Client Closed Connection");
         
         // -------------------------
 

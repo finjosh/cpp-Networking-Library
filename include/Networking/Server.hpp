@@ -83,7 +83,7 @@ public:
         /// @returns a pointer to the clients map
         const std::unordered_set<ClientData*>& getClients() const;
         /// @returns the number of clients
-        sf::Uint32 getClientsSize() const;
+        std::uint32_t getClientsSize() const;
         /// @returns the clientData ptr or nullptr if no client found with given id
         const ClientData* getClientData(ID clientID) const;
         /// @brief Sends the given packet to every client currently connected
@@ -104,7 +104,7 @@ public:
             /// @returns true if server was started with the port that was previously set
             virtual bool tryOpenConnection() override;
             /// @brief closes the server and disconnects all clients
-            virtual void closeConnection() override;
+            virtual void closeConnection(const std::string& reason = "Server Closed Connection via function call") override;
 
         // -------------------------
 

@@ -64,17 +64,14 @@ void Client::m_parse_connection_close(sf::Packet& packet, sf::IpAddress senderIP
     else
         packet >> reason;
 
-    m_connectionOpen = false;
-    m_connectionTime = 0.f;
     closeConnection();
-    this->onConnectionClose.invoke(reason, m_threadSafeEvents, m_overrideEvents);
 }
 
 void Client::m_parse_connection_confirm(sf::Packet& packet, sf::IpAddress senderIP, PORT senderPort)
 {
     m_connectionOpen = true;
     m_connectionTime = 0.f;
-    packet >> m_ip; // getting the ip from the packet (the id that the server assigned)
+    packet >> m_id; // getting the ip from the packet (the id that the server assigned)
     this->onConnectionOpen.invoke(m_threadSafeEvents, m_overrideEvents);
 }
 
@@ -105,50 +102,55 @@ void Client::sendPasswordToServer()
 {
     m_wrongPassword = false;
     sf::Packet temp = this->PasswordPacket(m_password);
-    m_send(temp, getServerIP(), getServerPort());
+    if (getServerIP().has_value())
+        m_send(temp, getServerIP().value(), getServerPort());
 }
 
-void Client::setServerData(sf::IpAddress serverIP, PORT serverPort)
+bool Client::setServerData(IpAddress_t serverIP, PORT serverPort)
 {
-    if (isConnectionOpen())
-        return;
+    if (isConnectionOpen() || !serverIP.has_value())
+        return false;
         
     setServerData(serverIP);
-    setServerData(serverPort);  
+    setServerData(serverPort);
+
+    return true;
 }
 
-void Client::setServerData(sf::IpAddress serverIP)
+bool Client::setServerData(IpAddress_t serverIP)
 {
-    if (isConnectionOpen())
-        return;
-        
-    if (serverIP == "")
-        m_serverIP = sf::IpAddress::LocalHost;
-    else
-        m_serverIP = serverIP; 
-    onServerIpChanged.invoke(getServerIP(), m_threadSafeEvents, m_overrideEvents);
+    if (isConnectionOpen() || !serverIP.has_value())
+        return false;
+
+    m_serverIP = serverIP; 
+    onServerIpChanged.invoke(getServerIP().value(), m_threadSafeEvents, m_overrideEvents);
+
+    return true;
 }
 
-void Client::setServerData(PORT port)
+bool Client::setServerData(PORT port)
 {
     if (isConnectionOpen())
-        return;
+        return false;
         
     m_serverPort = port;
     onServerPortChanged.invoke(getServerPort(), m_threadSafeEvents, m_overrideEvents);
+
+    return true;
 }
 
 void Client::sendToServer(sf::Packet& packet)
 {
     if (!m_connectionOpen) return;
     m_wrongPassword = false;
-    m_send(packet, getServerIP(), getServerPort());
+    assert(getServerIP().has_value() && "Must not send data to server with an invalid serverIP");
+    m_send(packet, getServerIP().value(), getServerPort());
 }
 
 float Client::getTimeSinceLastPacket() const
 { return m_timeSinceLastPacket; }
 
-sf::IpAddress Client::getServerIP() const
+IpAddress_t Client::getServerIP() const
 { return m_serverIP; }
 
 unsigned int Client::getServerPort() const
@@ -162,11 +164,12 @@ bool Client::tryOpenConnection()
 
     sf::Packet connectionRequest = this->ConnectionRequestTemplate();
 
-    if (getServerIP() != sf::IpAddress::None)
+    if (getServerIP().has_value())
     {
         if (!this->isReceivingPackets())
         {
-            this->bind(Socket::AnyPort);
+            if (this->bind(Socket::AnyPort) != sf::Socket::Status::Done)
+                return false;
             setPort(Socket::getLocalPort());
             startThreads(); //! needs to be called AFTER port binding
         }
@@ -177,12 +180,12 @@ bool Client::tryOpenConnection()
     }
 
     // checking if connecting to localhost as ID will be different in that case
-    if (getServerIP() == sf::IpAddress::LocalHost) m_ip = sf::IpAddress::LocalHost.toInteger();
+    if (getServerIP() == sf::IpAddress::LocalHost) m_id = sf::IpAddress::LocalHost.toInteger();
 
     try
     {
         // if this fails socket did not open
-        m_send(connectionRequest, getServerIP(), getServerPort());
+        m_send(connectionRequest, getServerIP().value(), getServerPort());
     }
     catch(const std::exception& e)
     {
@@ -195,18 +198,19 @@ bool Client::tryOpenConnection()
     return true;
 }
 
-void Client::closeConnection()
+void Client::closeConnection(const std::string& reason)
 {
     if (!this->isConnectionOpen())
         return;
 
-    sf::Packet close = this->ConnectionCloseTemplate("Client Connection Closed");
+    sf::Packet close = this->ConnectionCloseTemplate(reason);
     this->sendToServer(close);
-    this->onConnectionClose.invoke("Called \"closeConnection\"", m_threadSafeEvents, m_overrideEvents);
  
     m_reset_connection_data();
     stopThreads();
     sf::Socket::close();
+
+    this->onConnectionClose.invoke(reason, m_threadSafeEvents, m_overrideEvents);
 }
 
 // ---------------------------

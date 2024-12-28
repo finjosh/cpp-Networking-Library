@@ -66,15 +66,15 @@ void Server::m_second_update_function()
 
 void Server::m_parse_data(sf::Packet& packet, sf::IpAddress senderIP, PORT senderPort)
 {
-    IP ip = senderIP.toInteger();
+    ID id = senderIP.toInteger();
 
-    ClientData* client = m_getClientData((ID)ip);
+    ClientData* client = m_getClientData(id);
     // checking if the sender is a current client
     if (client != nullptr) 
     {
         client->m_timeSinceLastPacket = 0.0;
         client->m_packetsSent++;
-        this->onDataReceived.invoke(packet, (ID)ip, m_threadSafeEvents, m_overrideEvents);
+        this->onDataReceived.invoke(packet, id, m_threadSafeEvents, m_overrideEvents);
     }
     // if the sender is not a current client add them if possible
     else
@@ -83,12 +83,12 @@ void Server::m_parse_data(sf::Packet& packet, sf::IpAddress senderIP, PORT sende
             return;
         if (!m_needsPassword) // send password request if needed
         {
-            m_clientData.insert(new ClientData{senderPort, (ID)ip});
+            m_clientData.insert(new ClientData{senderPort, id});
 
-            sf::Packet Confirmation = this->ConnectionConfirmPacket(ip);
+            sf::Packet Confirmation = this->ConnectionConfirmPacket(id);
             m_send(Confirmation, senderIP, senderPort);
 
-            this->onClientConnected.invoke((ID)(ip), m_threadSafeEvents, m_overrideEvents);
+            this->onClientConnected.invoke(id, m_threadSafeEvents, m_overrideEvents);
         }
         else
         {
@@ -101,7 +101,7 @@ void Server::m_parse_data(sf::Packet& packet, sf::IpAddress senderIP, PORT sende
 void Server::m_parse_connection_request(sf::Packet& packet, sf::IpAddress senderIP, PORT senderPort)
 {
     if (!m_allowClientConnection) return;
-    IP ip = senderIP.toInteger();
+    ID id = senderIP.toInteger();
     if (this->m_needsPassword)
     {
         sf::Packet needPassword = this->PasswordRequestPacket();
@@ -111,16 +111,16 @@ void Server::m_parse_connection_request(sf::Packet& packet, sf::IpAddress sender
     else
     {
         // checking if the client is not already connected
-        if (m_getClientData((ID)ip) == nullptr)
+        if (m_getClientData(id) == nullptr)
         {
-            m_clientData.insert(new ClientData{senderPort, (ID)ip});
+            m_clientData.insert(new ClientData{senderPort, id});
         }
         // we still want to send a confirmation as the confirmation packet may have been lost
     }
 
     sf::Packet Confirmation = this->ConnectionConfirmPacket(senderIP.toInteger());
     m_send(Confirmation, senderIP, senderPort);
-    this->onClientConnected.invoke((ID)ip, m_threadSafeEvents, m_overrideEvents);
+    this->onClientConnected.invoke(id, m_threadSafeEvents, m_overrideEvents);
 }
 
 void Server::m_parse_connection_close(sf::Packet& packet, sf::IpAddress senderIP, PORT senderPort)
@@ -138,9 +138,9 @@ void Server::m_parse_password(sf::Packet& packet, sf::IpAddress senderIP, PORT s
 {
     std::string sentPassword;
     packet >> sentPassword;
-    IP ip = senderIP.toInteger();
+    ID id = senderIP.toInteger();
 
-    ClientData* client = m_getClientData((ID)ip);
+    ClientData* client = m_getClientData(id);
     if (client != nullptr) // if client is already connected
     {
         // make sure the client knows they are connected by sending another connection confirmation
@@ -151,12 +151,12 @@ void Server::m_parse_password(sf::Packet& packet, sf::IpAddress senderIP, PORT s
     
     if (m_password == sentPassword) // if password is correct
     {
-        m_clientData.insert(new ClientData{senderPort, (ID)ip});
+        m_clientData.insert(new ClientData{senderPort, id});
        
         // send confirmation as password was correct
         sf::Packet Confirmation = this->ConnectionConfirmPacket(senderIP.toInteger());
         m_send(Confirmation, senderIP, senderPort);
-        this->onClientConnected.invoke((ID)ip, m_threadSafeEvents, m_overrideEvents);
+        this->onClientConnected.invoke(id, m_threadSafeEvents, m_overrideEvents);
     }
     else
     {
@@ -199,7 +199,7 @@ void Server::sendToAll(sf::Packet& packet, std::list<ID> blacklist)
     for (auto& client: m_clientData)
     {
         if (std::find(blacklist.begin(), blacklist.end(), client->id) == blacklist.end()) // if we did not find the client then it is NOT in the black list
-            m_send(packet, sf::IpAddress((IP)client->id), client->port);
+            m_send(packet, sf::IpAddress(client->id), client->port);
     }
 }
 
@@ -212,7 +212,7 @@ bool Server::sendTo(sf::Packet& packet, ID id)
         // if the client was not found
         if (client == nullptr) return false;
 
-        m_send(packet, sf::IpAddress((IP)id), client->port);
+        m_send(packet, sf::IpAddress(id), client->port);
         return true;
     }
     return false;
@@ -246,8 +246,8 @@ void Server::disconnectAllClients(const std::string& reason)
 const std::unordered_set<ClientData*>& Server::getClients() const
 { return m_clientData;}
 
-sf::Uint32 Server::getClientsSize() const
-{ return (sf::Uint32)m_clientData.size();}
+std::uint32_t Server::getClientsSize() const
+{ return (std::uint32_t)m_clientData.size();}
 
 const ClientData* Server::getClientData(ID clientID) const
 {
@@ -281,17 +281,17 @@ bool Server::tryOpenConnection()
     return true;
 }
 
-void Server::closeConnection()
+void Server::closeConnection(const std::string& reason)
 {
     if (!isConnectionOpen()) return;
 
-    disconnectAllClients("Server Closing");
+    disconnectAllClients(reason);
 
     m_reset_connection_data();
     stopThreads();
     close();
 
-    onConnectionClose.invoke("Called \"closeConnection\"", m_threadSafeEvents, m_overrideEvents);
+    onConnectionClose.invoke(reason, m_threadSafeEvents, m_overrideEvents);
 }
 
 // -------------------------

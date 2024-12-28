@@ -7,7 +7,7 @@
                 "${workspaceFolder}",
                 "${workspaceFolder}/include",
                 "/Git_projects/cpp-Utilities/include",
-                "/VSCodeFolder/Libraries/TGUI-1.x/include"
+                "/VSCodeFolder/Libraries/TGUI-1.7/include"
             ],
             "defines": [
                 "_DEBUG",

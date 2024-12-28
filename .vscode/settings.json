@@ -93,7 +93,12 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "hash_set": "cpp"
+        "hash_set": "cpp",
+        "format": "cpp",
+        "generator": "cpp",
+        "print": "cpp",
+        "stdfloat": "cpp",
+        "text_encoding": "cpp"
     },
     "makefile.launchConfigurations": [
         {
@@ -105,5 +110,6 @@
     "makefile.makefilePath": "Makefile",
     "C_Cpp.default.compilerPath": "V:\\VSCodeFolder\\MSYS2\\mingw64\\bin\\gcc.exe",
     "cSpell.words": [
+        "tgui"
     ]
 }

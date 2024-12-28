@@ -153,7 +153,7 @@ void SocketUI::setConnectionVisible(bool visible)
                     std::string pass = m_IPEdit->getText().toStdString();
                     if (Socket::isValidIpAddress(pass))
                     {
-                        getClient().setServerData(sf::IpAddress(pass)); 
+                        getClient().setServerData(sf::IpAddress::resolve(pass)); 
                         this->m_validIPState = validIP::valid;
                         return;
                     }
@@ -183,7 +183,7 @@ void SocketUI::setConnectionVisible(bool visible)
                     else
                     {
                         this->m_IPEdit->setDefaultText("Server IP");
-                        this->m_IPEdit->setText(this->getClient().getServerIP().toString());
+                        this->m_IPEdit->setText(this->getClient().getServerIP().value().toString()); // guaranteed to be valid by this point
                     }
                     tempThread->detach();
                     delete(tempThread);
@@ -344,8 +344,16 @@ void SocketUI::m_updateInfo()
     else
     {
         m_list->changeItem(0, {"ID", std::to_string(m_socket->getID())});
-        m_list->changeItem(1, {"Public IP", m_socket->getIP().toString()});
-        m_list->changeItem(2, {"Local IP", m_socket->getLocalIP().toString()});
+        if (m_socket->getIP().has_value())
+            m_list->changeItem(1, {"Public IP", m_socket->getIP().value().toString()});
+        else
+            m_list->changeItem(1, {"Public IP", "Unable to resolve"});
+
+        if (m_socket->getLocalIP().has_value())
+            m_list->changeItem(2, {"Local IP", m_socket->getLocalIP().value().toString()});
+        else 
+            m_list->changeItem(2, {"Local IP", "Unable to resolve"});
+
         m_list->changeItem(3, {"Port", std::to_string(m_socket->getPort())});
         m_list->changeItem(4, {"Connection Open", (m_socket->isConnectionOpen() ? "True" : "False")});
         m_list->changeItem(5, {"Connection Open Time", std::to_string(m_socket->getConnectionTime())});
@@ -472,7 +480,7 @@ void SocketUI::m_updateConnectionDisplay()
         this->m_setClient();
 
         if (isConnectionOpen())
-            m_IPEdit->setText(m_client.getServerIP().toString());
+            m_IPEdit->setText(m_client.getServerIP().value().toString());
         m_addWidgetToConnection(m_IPEdit, 1);
         if (m_validIPState == validIP::checking) 
             m_addWidgetToConnection(m_IPState, 1, 5);
@@ -539,7 +547,9 @@ void SocketUI::m_tryOpenConnection()
     {
         if (!m_client.NeedsPassword())
         {
-            m_client.tryOpenConnection();
+            m_client.tryOpenConnection(); // TODO add some user feed back if this fails
+            if (m_client.getServerIP().has_value())
+                m_IPEdit->setText(m_client.getServerIP().value().toString());
         }
         else
         {

@@ -23,7 +23,7 @@ inline sf::Packet& operator >>(sf::Packet& packet, sf::Packet& otherPacket)
 {
     size_t sizeOfData;
     packet >> sizeOfData;
-    std::vector<sf::Int8> data(sizeOfData, 0);
+    std::vector<std::int8_t> data(sizeOfData, 0);
     for (size_t i = 0; i < sizeOfData; i++)
     {
         packet >> data[i];
@@ -35,13 +35,12 @@ inline sf::Packet& operator >>(sf::Packet& packet, sf::Packet& otherPacket)
 namespace udp
 {
 
+typedef std::optional<sf::IpAddress> IpAddress_t;
 // ID = Uint32
-typedef sf::Uint32 ID;
-// IP = ID (Uint32)
-typedef ID IP;
+typedef std::uint32_t ID;
 typedef unsigned short PORT;
 
-enum PacketType : sf::Int8
+enum PacketType : std::int8_t
 {
     Data = 0,
     ConnectionRequest = 1,
@@ -57,7 +56,8 @@ protected:
 
     //* Connection Data
     
-        IP m_ip = 0;
+        /// @brief comes from the public IP
+        ID m_id = 0;
         bool m_needsPassword = false;
         std::string m_password = "";
         unsigned short m_port = 777;
@@ -207,7 +207,7 @@ public:
         //* Pure Virtual Functions
 
             virtual bool tryOpenConnection() = 0;
-            virtual void closeConnection() = 0;
+            virtual void closeConnection(const std::string& reason = "Server Closing") = 0;
 
         // -----------------------
 
@@ -218,11 +218,9 @@ public:
         /// @returns ID
         ID getID() const;
         /// @returns IP as IPAddress
-        sf::IpAddress getIP() const;
+        IpAddress_t getIP() const;
         /// @returns Local IP as IPAddress
-        sf::IpAddress getLocalIP() const;
-        /// @returns IP as integer
-        IP getIntIP() const;
+        IpAddress_t getLocalIP() const;
         /// @returns the time in seconds
         double getConnectionTime() const;
         /// @returns the time in seconds
@@ -281,7 +279,7 @@ public:
         static bool isValidIpAddress(sf::IpAddress ipAddress);
         /// @brief Checks if the given ipAddress is valid
         /// @note if it is invalid program will freeze for a few seconds
-        static bool isValidIpAddress(sf::Uint32 ipAddress);
+        static bool isValidIpAddress(std::uint32_t ipAddress);
         /// @brief Checks if the given ipAddress is valid
         /// @note if it is invalid program will freeze for a few seconds
         static bool isValidIpAddress(const std::string& ipAddress);
@@ -294,7 +292,7 @@ public:
         static sf::Packet ConnectionRequestTemplate();
         static sf::Packet DataPacketTemplate();
         /// @param id the id that the client should use for identification
-        static sf::Packet ConnectionConfirmPacket(sf::Uint32 id);
+        static sf::Packet ConnectionConfirmPacket(std::uint32_t id);
         static sf::Packet PasswordRequestPacket();
         static sf::Packet PasswordPacket(const std::string& password);
 
