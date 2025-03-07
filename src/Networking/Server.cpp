@@ -226,8 +226,9 @@ bool Server::disconnectClient(ID id, const std::string& reason)
     {
         sf::Packet removePacket = this->ConnectionCloseTemplate(reason);
         sendTo(removePacket, id);
-        delete(*iter); // freeing the memory as we store client data as a pointer
+        ClientData* clientPtr = *iter;
         m_clientData.erase(iter);
+        delete(clientPtr); // freeing the memory as we store client data as a pointer
         this->onClientDisconnected.invoke(id, reason, m_threadSafeEvents, m_overrideEvents);
         return true;
     }

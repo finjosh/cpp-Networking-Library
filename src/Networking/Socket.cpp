@@ -151,9 +151,9 @@ void Socket::startThreads()
     {
         if (m_sSource != nullptr) delete(m_sSource);
         m_sSource = new std::stop_source;
-        m_receiveThread = new std::jthread{m_receive_packets_thread, this, m_sSource->get_token()};
+        m_receiveThread = new std::jthread(&Socket::m_receive_packets_thread, this, m_sSource->get_token());
     }
-    if (m_updateThread == nullptr) m_updateThread = new std::jthread{m_update_thread, this, m_sSource->get_token()};
+    if (m_updateThread == nullptr) m_updateThread = new std::jthread(&Socket::m_update_thread, this, m_sSource->get_token());
 }
 
 void Socket::stopThreads()
