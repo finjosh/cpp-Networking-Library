@@ -106,7 +106,7 @@ void SocketUI::setConnectionVisible(bool visible)
 
         m_connectionParent = tgui::ChildWindow::create("Connection Manager", tgui::ChildWindow::Close);
         m_UIParent->add(m_connectionParent);
-        m_connectionParent->onClose(setConnectionVisible, this, false);
+        m_connectionParent->onClose(&SocketUI::setConnectionVisible, this, false);
         m_connectionParent->setResizable(true);
 
         //* creating the widgets
@@ -131,7 +131,7 @@ void SocketUI::setConnectionVisible(bool visible)
         m_serverCheck->onUncheck([this](){ m_closeConnection(); this->m_resetUIConnectionStates(); m_updateConnectionDisplay(); });
         m_clientCheck->onCheck([this](){ m_serverCheck->setChecked(false); m_updateConnectionDisplay(); });
         m_clientCheck->onUncheck([this](){ m_closeConnection(); this->m_resetUIConnectionStates(); m_updateConnectionDisplay(); });
-        m_passCheck->onChange(m_updateConnectionDisplay, this);
+        m_passCheck->onChange(&SocketUI::m_updateConnectionDisplay, this);
         m_passEdit->onTextChange([this](){ 
             if (this->m_socket != nullptr)
             {
@@ -257,7 +257,7 @@ void SocketUI::setInfoVisible(bool visible)
         m_UIParent->add(m_infoParent);
 
         m_infoParent->setResizable(true);
-        m_infoParent->onClose(setInfoVisible, this, false);
+        m_infoParent->onClose(&SocketUI::setInfoVisible, this, false);
 
         m_list = tgui::ListView::create();
         m_infoParent->add(m_list);
@@ -276,12 +276,12 @@ void SocketUI::setInfoVisible(bool visible)
         m_list->addItem({"Connection Open", "NA"});
         m_list->addItem({"Connection Open Time", "NA"});
         m_list->setSize({"100%", tgui::bindMin(tgui::bindHeight(m_infoParent), m_list->getSizeLayout().y)});
-        m_list->onItemSelect(tgui::ListView::deselectItems, m_list);
+        m_list->onItemSelect(&tgui::ListView::deselectItems, m_list);
 
         m_clientData = tgui::TreeView::create();
         m_infoParent->add(m_clientData);
         m_clientData->setAutoLayout(tgui::AutoLayout::Fill);
-        m_clientData->onItemSelect(tgui::TreeView::deselectItem, m_clientData);
+        m_clientData->onItemSelect(&tgui::TreeView::deselectItem, m_clientData);
 
         if (isConnectionOpen() && isServer())
         {
