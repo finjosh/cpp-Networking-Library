@@ -6,8 +6,8 @@
                 "${default}",
                 "${workspaceFolder}",
                 "${workspaceFolder}/include",
-                "/Git_projects/cpp-Utilities/include",
-                "/VSCodeFolder/Libraries/TGUI-1.7/include"
+                "/dev-env/git-projects/cpp-Utilities/include",
+                "/dev-env/libraries/windows/TGUI-1.8.0/include" // should not matter if we use windows or linux includes as long as we compile with the right libs
             ],
             "defines": [
                 "_DEBUG",
