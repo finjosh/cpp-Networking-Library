@@ -45,7 +45,7 @@ RELEASE_FLAGS:=-O3
 # any other compiler options (warning flags -Wextra -Wall)
 GENERAL_COMPILER_FLAGS:=-std=c++20
 EXE_NAME:=main
-LIB_NAME:=utils
+LIB_NAME:=networking
 # Where the source files will be found (recursive)
 SOURCE_DIRECTORIES=/src
 # Where you don't want underlying folder/files to be included
