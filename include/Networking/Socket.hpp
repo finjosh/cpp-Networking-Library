@@ -40,7 +40,7 @@ typedef std::optional<sf::IpAddress> IpAddress_t;
 typedef std::uint32_t ID;
 typedef unsigned short PORT;
 
-enum PacketType : std::int8_t
+enum class PacketType : std::int8_t
 {
     Data = 0,
     ConnectionRequest = 1,

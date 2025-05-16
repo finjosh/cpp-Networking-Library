@@ -107,7 +107,7 @@ private:
     /// @brief connects the callbacks for the server and client
     void m_initEventCallbacks();
 
-    enum validIP
+    enum class validIP
     {
         valid,
         invalid,

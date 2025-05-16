@@ -54,27 +54,27 @@ void Socket::m_receive_packets_thread(std::stop_token sToken)
         
         switch (packetType)
         {
-        case PacketType::Data:
+        case (std::int8_t)PacketType::Data:
             m_parse_data(packet, senderIP.value(), senderPort);
             break;
         
-        case PacketType::ConnectionRequest:
+        case (std::int8_t)PacketType::ConnectionRequest:
             m_parse_connection_request(packet, senderIP.value(), senderPort);
             break;
 
-        case PacketType::ConnectionClose:
+        case (std::int8_t)PacketType::ConnectionClose:
             m_parse_connection_close(packet, senderIP.value(), senderPort);
             break;
 
-        case PacketType::ConnectionConfirm:
+        case (std::int8_t)PacketType::ConnectionConfirm:
             m_parse_connection_confirm(packet, senderIP.value(), senderPort);
             break;
 
-        case PacketType::PasswordRequest:
+        case (std::int8_t)PacketType::PasswordRequest:
             m_parse_password_request(packet, senderIP.value(), senderPort);
             break;
 
-        case PacketType::Password:
+        case (std::int8_t)PacketType::Password:
             m_parse_password(packet, senderIP.value(), senderPort);
             break;
 
@@ -311,7 +311,7 @@ bool Socket::isValidIpAddress(const std::string& ipAddress)
 sf::Packet Socket::ConnectionCloseTemplate(std::string reason)
 {
     sf::Packet out;
-    out << PacketType::ConnectionClose;
+    out << (std::int8_t)PacketType::ConnectionClose;
     out << reason;
     return out;
 }
@@ -319,21 +319,21 @@ sf::Packet Socket::ConnectionCloseTemplate(std::string reason)
 sf::Packet Socket::ConnectionRequestTemplate()
 {
     sf::Packet out;
-    out << PacketType::ConnectionRequest;
+    out << (std::int8_t)PacketType::ConnectionRequest;
     return out;
 }
 
 sf::Packet Socket::DataPacketTemplate()
 {
     sf::Packet out;
-    out << PacketType::Data;
+    out << (std::int8_t)PacketType::Data;
     return out;
 }
 
 sf::Packet Socket::ConnectionConfirmPacket(std::uint32_t id)
 {
     sf::Packet out;
-    out << PacketType::ConnectionConfirm;
+    out << (std::int8_t)PacketType::ConnectionConfirm;
     out << id;
     return out;
 }
@@ -341,14 +341,14 @@ sf::Packet Socket::ConnectionConfirmPacket(std::uint32_t id)
 sf::Packet Socket::PasswordRequestPacket()
 {
     sf::Packet out;
-    out << PacketType::PasswordRequest;
+    out << (std::int8_t)PacketType::PasswordRequest;
     return out;
 }
 
 sf::Packet Socket::PasswordPacket(const std::string& password)
 {
     sf::Packet out;
-    out << PacketType::Password;
+    out << (std::int8_t)PacketType::Password;
     out << password;
     return out;
 }

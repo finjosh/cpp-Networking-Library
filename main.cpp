@@ -65,30 +65,29 @@ int main()
     
     //! ---------------------------------------------------
     
-    Command::Handler::addCommand(Command::command("send", "Sends a message to all other clients connected if connection is open", {
-    [&sDisplay](Command::Data* data)
-    {
-        if (!sDisplay.isConnectionOpen()) return;
-
-        sf::Packet temp = udp::Socket::DataPacketTemplate();
-        std::string str;
-        while (data->getNumTokens())
+    Command::Handler::get().addCommand("send", "Sends a message to all other clients connected if connection is open",
+        [&sDisplay](Command::Data* data)
         {
-            str += data->getToken() + " ";
-            data->removeToken();
-        }
-        temp << str;
+            if (!sDisplay.isConnectionOpen()) return;
 
-        if (sDisplay.isServer())
-        {   
-            sDisplay.getServer().sendToAll(temp);
-        }
-        else
-        {
-            sDisplay.getClient().sendToServer(temp);
-        }
-    }
-    }));
+            sf::Packet temp = udp::Socket::DataPacketTemplate();
+            std::string str;
+            while (data->getNumTokens())
+            {
+                str += data->getToken() + " ";
+                data->removeToken();
+            }
+            temp << str;
+
+            if (sDisplay.isServer())
+            {   
+                sDisplay.getServer().sendToAll(temp);
+            }
+            else
+            {
+                sDisplay.getClient().sendToServer(temp);
+            }
+        });
 
     float upkeep = 0.f;
 
@@ -117,7 +116,7 @@ int main()
         //! Updates all Terminating Functions
         TerminatingFunction::UpdateFunctions(deltaTime.asSeconds());
         //* Updates for the terminating functions display
-        TFuncDisplay::update();
+        TFuncDisplay::Update();
         //! ------------------------------
 
         if (sDisplay.isConnectionOpen() && upkeep >= sDisplay.getSocket()->getTimeout()/4)
@@ -144,33 +143,30 @@ int main()
 
 void addThemeCommands()
 {
-    Command::Handler::addCommand(Command::command{"setTheme", "Function used to set the theme of the UI (The previous outputs in the command prompt will not get updated color)", 
-        {Command::helpCommand, "Trying calling one of the sub commands"}, {},
-        std::list<Command::command>{
-            Command::command{"default", "(Currently does not work, coming soon) Sets the theme back to default", {[](){ 
-                tgui::Theme::setDefault(""); //! This does not work due to a tgui issue
-                // Note that command color does not update with theme so you have to set the default color
-                Command::color::setDefaultColor({0,0,0,255}); // black
-            }}},
-            // Dark theme is a custom theme made by me 
-            // It can be found here: https://github.com/finjosh/TGUI-DarkTheme
-            Command::command{"dark", "Sets the them to the dark theme", {[](){ 
-                tgui::Theme::getDefault()->load("themes/Dark.txt"); 
-                // Note that command color does not update with theme so you have to set the default color
-                Command::color::setDefaultColor({255,255,255,255}); // white
-            }}}, 
-            Command::command{"black", "Sets the them to the black theme", {[](){ 
-                tgui::Theme::getDefault()->load("themes/Black.txt"); 
-                // Note that command color does not update with theme so you have to set the default color
-                Command::color::setDefaultColor({255,255,255,255}); // white
-            }}},
-            Command::command{"grey", "Sets the them to the transparent grey theme", {[](){ 
-                tgui::Theme::getDefault()->load("themes/TransparentGrey.txt"); 
-                // Note that command color does not update with theme so you have to set the default color
-                Command::color::setDefaultColor({0,0,0,255}); // black
-            }}}
-        }
-    });
+    Command::Handler::get().addCommand("setTheme", "Function used to set the theme of the UI (The previous outputs in the command prompt will not get updated color)", 
+        {Command::helpCommand, "Trying calling one of the sub commands"}, {});
+    Command::Handler::get().findCommand("setTheme")
+    ->addCommand("default", "(Currently does not work, coming soon) Sets the theme back to default", 
+        [](){ 
+            tgui::Theme::setDefault(""); //! This does not work due to a tgui issue
+        })
+    // Dark theme can be found here: https://github.com/finjosh/TGUI-DarkTheme
+    .addCommand("dark", "Sets the them to the dark theme", 
+        [](){ 
+            tgui::Theme::getDefault()->load("themes/Dark.txt"); 
+        })
+    .addCommand("light", "Sets the them to the light theme", 
+        [](){ 
+            tgui::Theme::getDefault()->load("themes/Light.txt"); 
+        })
+    .addCommand("black", "Sets the them to the black theme", 
+        [](){ 
+            tgui::Theme::getDefault()->load("themes/Black.txt"); 
+        })
+    .addCommand("grey", "Sets the them to the transparent grey theme", 
+        [](){ 
+            tgui::Theme::getDefault()->load("themes/TransparentGrey.txt"); 
+        });
 }
 
 void tryLoadTheme(std::list<std::string> themes, std::list<std::string> directories)
@@ -182,7 +178,6 @@ void tryLoadTheme(std::list<std::string> themes, std::list<std::string> director
             if (std::filesystem::exists(directory + theme))
             {
                 tgui::Theme::setDefault(directory + theme);
-                Command::Prompt::UpdateDefaultColor();
                 return;
             }
         }
