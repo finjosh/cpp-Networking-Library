@@ -1,4 +1,7 @@
 #include "Networking/SocketUI.hpp"
+#include "SFML/Network/Dns.hpp"
+#include <SFML/Network/IpAddress.hpp>
+#include <optional>
 
 using namespace udp;
 
@@ -153,8 +156,22 @@ void SocketUI::setConnectionVisible(bool visible)
                     std::string pass = m_IPEdit->getText().toStdString();
                     if (Socket::isValidIpAddress(pass))
                     {
-                        getClient().setServerData(sf::IpAddress::resolve(pass)); 
-                        this->m_validIPState = validIP::valid;
+                        std::optional<std::vector<sf::IpAddress>> serverPublicIP = sf::Dns::resolve(pass);
+
+                        if (!serverPublicIP.has_value())
+                        {
+                            m_validIPState = validIP::failed_to_resolve;
+                        }
+                        else if (serverPublicIP->size() == 0)
+                        {
+                            m_validIPState = validIP::invalid;
+                        }
+                        else 
+                        {
+                            getClient().setServerData(serverPublicIP->front());
+                            this->m_validIPState = validIP::valid;
+                        }
+                        
                         return;
                     }
                     this->m_validIPState = validIP::invalid;
@@ -178,6 +195,11 @@ void SocketUI::setConnectionVisible(bool visible)
                     else if (this->m_validIPState == validIP::invalid)
                     {
                         this->m_IPEdit->setDefaultText("Invalid IP Entered");
+                        this->m_IPEdit->setText("");
+                    }
+                    else if (m_validIPState == validIP::failed_to_resolve)
+                    {
+                        m_IPEdit->setDefaultText("Failed to resolve IP");
                         this->m_IPEdit->setText("");
                     }
                     else

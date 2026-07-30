@@ -32,7 +32,7 @@ int main()
     tryLoadTheme({"Dark.txt", "Black.txt"}, {"", "Assets/", "themes/", "Themes/", "assets/", "Assets/Themes/", "Assets/themes/", "assets/themes/", "assets/Themes/"});
     // -----------------------
 
-    udp::SocketUI sDisplay(gui, 50001);
+    udp::SocketUI sDisplay(gui, 35516);
     sDisplay.setConnectionVisible();
     sDisplay.setInfoVisible();
     sDisplay.getServer().onDataReceived([&sDisplay](sf::Packet packet, udp::ID id){
@@ -94,7 +94,7 @@ int main()
     sf::Clock deltaClock;
     while (window.isOpen())
     {
-        EventHelper::Event::ThreadSafe::update();
+        EventHelper::Event::Synchronized::update();
         window.clear();
         // updating the delta time var
         sf::Time deltaTime = deltaClock.restart();

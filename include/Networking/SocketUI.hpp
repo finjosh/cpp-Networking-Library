@@ -111,7 +111,8 @@ private:
     {
         valid,
         invalid,
-        checking
+        checking,
+        failed_to_resolve
     };
 
     validIP m_validIPState = validIP::valid;

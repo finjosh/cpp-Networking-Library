@@ -19,6 +19,11 @@ define general_config
 	# empty defaults to ${PROJECT_DIRECTORY}
 	PROJECT_OUT_DIRECTORY:=
 	OBJECT_OUT_DIRECTORY:=/bin/$${COMPILE_OS}
+	ifeq ($${COMPILE_OS}, windows)
+	ifeq ($${HOST_OS}, linux)
+	OBJECT_OUT_DIRECTORY:=/bin/windows-via-linux
+	endif
+	endif
 	LINKER_FLAGS:=SET_LATER
 	INCLUDE_FLAGS:=
 	EXECUTABLE_EXTENSION:=SET_LATER
@@ -46,9 +51,9 @@ define general_config
 	GIT_LIB_PREFIX:=$$(MOUNT_POINT)/dev-env/git-projects
 	# -------------------------------------------------------------
 
-	INCLUDE_DIRECTORIES=$${LIBRARY_PREFIX}/SFML-3.0.0/include $${LIBRARY_PREFIX}/TGUI-1.9.0/include\
+	INCLUDE_DIRECTORIES=$${LIBRARY_PREFIX}/SFML-3.1.0/include $${LIBRARY_PREFIX}/TGUI-1.13/include\
 						$${PROJECT_DIRECTORY} $${PROJECT_DIRECTORY}/include $${GIT_LIB_PREFIX}/cpp-Utilities/include
-	LIB_DIRECTORIES=$${LIBRARY_PREFIX}/SFML-3.0.0/lib $${LIBRARY_PREFIX}/TGUI-1.9.0/lib $${GIT_LIB_PREFIX}/cpp-Utilities/lib/$${COMPILE_OS}
+	LIB_DIRECTORIES=$${LIBRARY_PREFIX}/SFML-3.1.0/lib $${LIBRARY_PREFIX}/TGUI-1.13/lib $${GIT_LIB_PREFIX}/cpp-Utilities/lib/$${COMPILE_OS}
 endef
 
 define executable_config
@@ -101,7 +106,7 @@ endef
 define linux_config
 	EXECUTABLE_EXTENSION:=
 	LIB_EXTENSION:=.so
-	CREATE_LIB:=g++ -shared -o
+	CREATE_LIB:=g++ ${C_CPP_COMPILER_FLAGS} -shared -o
 	
 	INCLUDE_DIRECTORIES:=$${INCLUDE_DIRECTORIES} /usr/include
 	LIB_DIRECTORIES:=$${LIB_DIRECTORIES} /lib

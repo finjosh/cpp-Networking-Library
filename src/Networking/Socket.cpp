@@ -2,6 +2,7 @@
 #include "Utils/UpdateLimiter.hpp"
 #include <stdexcept>
 #include <SFML/System/Clock.hpp>
+#include <SFML/Network/Dns.hpp>
 
 using namespace udp;
 
@@ -301,8 +302,9 @@ bool Socket::isSendingPackets() const
 bool Socket::NeedsPassword() const
 { return this->m_needsPassword; }
 
+// TODO do this without requiring a dns query
 bool Socket::isValidIpAddress(const std::string& ipAddress)
-{ return sf::IpAddress::resolve(ipAddress).has_value(); }
+{ return sf::Dns::resolve(ipAddress).has_value(); }
 
 // ---------------------------
 
